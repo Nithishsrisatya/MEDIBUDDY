@@ -1,25 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user.model');
 const { auth, checkRole } = require('../middleware/auth.middleware');
+const DoctorService = require('../services/doctorService');
+const AppointmentService = require('../services/appointmentService');
+const PatientService = require('../services/patientService');
+const NotificationService = require('../services/notificationService');
 
 // Get all doctors
 router.get('/', auth, async (req, res) => {
     try {
         const { specialization, name } = req.query;
-        let query = { role: 'doctor' };
-
-        if (specialization) {
-            query.specialization = new RegExp(specialization, 'i');
-        }
-
-        if (name) {
-            query.name = new RegExp(name, 'i');
-        }
-
-        const doctors = await User.find(query)
-            .select('name specialization qualification experience availability')
-            .sort('name');
+        const doctors = await DoctorService.getAllDoctors({ specialization, name });
 
         res.json({
             success: true,
@@ -28,8 +19,7 @@ router.get('/', auth, async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error fetching doctors',
-            error: error.message
+            message: error.message
         });
     }
 });
@@ -37,27 +27,22 @@ router.get('/', auth, async (req, res) => {
 // Get doctor by ID
 router.get('/:id', auth, async (req, res) => {
     try {
-        const doctor = await User.findOne({
-            _id: req.params.id,
-            role: 'doctor'
-        }).select('-password');
-
-        if (!doctor) {
-            return res.status(404).json({
-                success: false,
-                message: 'Doctor not found'
-            });
-        }
+        const doctor = await DoctorService.getDoctorById(req.params.id);
 
         res.json({
             success: true,
             data: { doctor }
         });
     } catch (error) {
+        if (error.message.includes('not found')) {
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
         res.status(500).json({
             success: false,
-            message: 'Error fetching doctor details',
-            error: error.message
+            message: error.message
         });
     }
 });
@@ -66,49 +51,22 @@ router.get('/:id', auth, async (req, res) => {
 router.patch('/:id/availability', auth, checkRole(['doctor']), async (req, res) => {
     try {
         const { availability } = req.body;
-        
-        if (!Array.isArray(availability)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Availability must be an array'
-            });
-        }
-
-        // Validate each availability slot
-        for (const slot of availability) {
-            if (!slot.day || !slot.startTime || !slot.endTime) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Each availability slot must have day, startTime, and endTime'
-                });
-            }
-        }
-
-        const doctor = await User.findOneAndUpdate(
-            {
-                _id: req.params.id,
-                role: 'doctor'
-            },
-            { availability },
-            { new: true }
-        ).select('-password');
-
-        if (!doctor) {
-            return res.status(404).json({
-                success: false,
-                message: 'Doctor not found'
-            });
-        }
+        const doctor = await DoctorService.updateDoctorAvailability(req.params.id, availability);
 
         res.json({
             success: true,
             data: { doctor }
         });
     } catch (error) {
-        res.status(500).json({
+        if (error.message.includes('not found')) {
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+        res.status(400).json({
             success: false,
-            message: 'Error updating doctor availability',
-            error: error.message
+            message: error.message
         });
     }
 });
@@ -116,48 +74,129 @@ router.patch('/:id/availability', auth, checkRole(['doctor']), async (req, res) 
 // Get doctor's statistics
 router.get('/:id/stats', auth, checkRole(['doctor', 'admin']), async (req, res) => {
     try {
-        const doctor = await User.findOne({
-            _id: req.params.id,
-            role: 'doctor'
-        });
-
-        if (!doctor) {
-            return res.status(404).json({
-                success: false,
-                message: 'Doctor not found'
-            });
-        }
-
-        // Get appointment statistics
-        const today = new Date();
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        const stats = await Appointment.aggregate([
-            {
-                $match: {
-                    doctor: doctor._id,
-                    dateTime: { $gte: startOfMonth }
-                }
-            },
-            {
-                $group: {
-                    _id: '$status',
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
+        const stats = await DoctorService.getDoctorStats(req.params.id);
 
         res.json({
             success: true,
             data: { stats }
         });
     } catch (error) {
+        if (error.message.includes('not found')) {
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
         res.status(500).json({
             success: false,
-            message: 'Error fetching doctor statistics',
-            error: error.message
+            message: error.message
         });
     }
 });
 
-module.exports = router; 
+// Set sample availability for all doctors (for testing)
+router.post('/set-sample-availability', async (req, res) => {
+    try {
+        const sampleAvailability = [
+            { day: 'Monday', startTime: '09:00', endTime: '17:00' },
+            { day: 'Tuesday', startTime: '09:00', endTime: '17:00' },
+            { day: 'Wednesday', startTime: '09:00', endTime: '17:00' },
+            { day: 'Thursday', startTime: '09:00', endTime: '17:00' },
+            { day: 'Friday', startTime: '09:00', endTime: '17:00' },
+            { day: 'Saturday', startTime: '10:00', endTime: '14:00' }
+        ];
+
+        const result = await DoctorService.setSampleAvailability(sampleAvailability);
+
+        res.json({
+            success: true,
+            message: `Updated availability for ${result.modifiedCount} doctors`
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+
+// Get doctor's upcoming appointments
+router.get('/:id/appointments/upcoming', auth, checkRole(['doctor', 'admin']), async (req, res) => {
+    try {
+        const doctorId = req.params.id;
+
+        // Check if the requesting user is the doctor themselves or an admin
+        if (req.user.role === 'doctor' && req.user._id.toString() !== doctorId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You can only view your own appointments.'
+            });
+        }
+
+        const appointments = await AppointmentService.getDoctorUpcomingAppointments(doctorId);
+
+        res.json({
+            success: true,
+            data: { appointments }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Get patients seen by doctor
+router.get('/:id/patients', auth, checkRole(['doctor', 'admin']), async (req, res) => {
+    try {
+        const doctorId = req.params.id;
+
+        // Check if the requesting user is the doctor themselves or an admin
+        if (req.user.role === 'doctor' && req.user._id.toString() !== doctorId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You can only view your own patients.'
+            });
+        }
+
+        const patients = await PatientService.getDoctorPatients(doctorId);
+
+        res.json({
+            success: true,
+            data: { patients }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Update doctor's online status
+router.patch('/:id/online', auth, checkRole(['doctor']), async (req, res) => {
+    try {
+        const { online } = req.body;
+        const doctor = await DoctorService.updateDoctorOnlineStatus(req.params.id, online);
+
+        res.json({
+            success: true,
+            data: { doctor }
+        });
+    } catch (error) {
+        if (error.message.includes('not found')) {
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+module.exports = router;
