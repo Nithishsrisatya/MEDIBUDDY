@@ -14,6 +14,10 @@ const appointmentValidation = [
     body('paymentAmount').isNumeric().withMessage('Valid payment amount is required')
 ];
 
+const rescheduleValidation = [
+    body('dateTime').isISO8601().withMessage('Valid date and time is required')
+];
+
 // Create appointment
 router.post('/', auth, appointmentValidation, async (req, res) => {
     try {
@@ -90,6 +94,86 @@ router.get('/my-appointments', auth, async (req, res) => {
     }
 });
 
+// Update appointment (reschedule)
+router.patch('/:id', auth, rescheduleValidation, async (req, res) => {
+    console.log('Reschedule route hit for ID:', req.params.id);
+    console.log('Request body:', req.body);
+    console.log('User:', req.user ? req.user._id : 'No user');
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            console.log('Validation errors:', errors.array());
+            return res.status(400).json({
+                success: false,
+                errors: errors.array()
+            });
+        }
+
+        const { dateTime } = req.body;
+        const appointment = await Appointment.findById(req.params.id);
+
+        console.log('Found appointment:', appointment ? 'Yes' : 'No');
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Appointment not found'
+            });
+        }
+
+        // Check if user has permission to update
+        if (
+            req.user.role !== 'admin' &&
+            appointment.doctor.toString() !== req.user._id.toString() &&
+            appointment.patient.toString() !== req.user._id.toString()
+        ) {
+            console.log('Permission denied');
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this appointment'
+            });
+        }
+
+        // Check if can reschedule (must be scheduled)
+        if (appointment.status !== 'scheduled') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot reschedule appointment that is not scheduled'
+            });
+        }
+
+        // Check for existing appointments at the new time
+        const existingAppointment = await Appointment.findOne({
+            doctor: appointment.doctor,
+            dateTime: dateTime,
+            status: 'scheduled',
+            _id: { $ne: appointment._id } // exclude current appointment
+        });
+
+        if (existingAppointment) {
+            return res.status(400).json({
+                success: false,
+                message: 'This time slot is already booked'
+            });
+        }
+
+        appointment.dateTime = dateTime;
+        await appointment.save();
+
+        res.json({
+            success: true,
+            data: { appointment }
+        });
+    } catch (error) {
+        console.error('Reschedule error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error rescheduling appointment',
+            error: error.message
+        });
+    }
+});
+
 // Update appointment status
 router.patch('/:id/status', auth, async (req, res) => {
     try {
@@ -116,10 +200,10 @@ router.patch('/:id/status', auth, async (req, res) => {
         }
 
         // Validate status change
-        if (status === 'cancelled' && !appointment.canBeCancelled()) {
+        if (status === 'cancelled' && appointment.status !== 'scheduled') {
             return res.status(400).json({
                 success: false,
-                message: 'Cannot cancel appointment less than 24 hours before scheduled time'
+                message: 'Cannot cancel appointment that is not scheduled'
             });
         }
 

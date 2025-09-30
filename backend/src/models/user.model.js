@@ -41,15 +41,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['male', 'female', 'other']
     },
+    bloodGroup: {
+        type: String,
+        enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+    },
     profilePicture: {
         type: String
     },
-    medicalHistory: [{
-        condition: String,
-        diagnosis: String,
-        treatment: String,
-        diagnosedDate: Date
-    }],
+    medicalHistory: {
+        type: String
+    },
     // Additional fields for doctors
     specialization: {
         type: String,
@@ -63,11 +64,82 @@ const userSchema = new mongoose.Schema({
         type: Number,
         required: function() { return this.role === 'doctor'; }
     },
+    clinicName: {
+        type: String,
+        required: function() { return this.role === 'doctor'; }
+    },
+    consultationFee: {
+        type: Number,
+        required: function() { return this.role === 'doctor'; }
+    },
     availability: [{
-        day: String,
-        startTime: String,
-        endTime: String
-    }]
+        day: {
+            type: String,
+            enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            required: true
+        },
+        startTime: {
+            type: String,
+            required: true
+        },
+        endTime: {
+            type: String,
+            required: true
+        }
+    }],
+    location: {
+        type: {
+            city: String,
+            state: String,
+            country: String,
+            pincode: String
+        },
+        required: false
+    },
+    languages: {
+        type: [String],
+        default: [],
+        required: function() { return this.role === 'doctor'; }
+    },
+    rating: {
+        type: Number,
+        default: 0
+    },
+    reviews: [{
+        patientId: mongoose.Schema.Types.ObjectId,
+        comment: String,
+        stars: Number
+    }],
+    emergencyContact: {
+        type: String
+    },
+    videoConsultation: {
+        type: Boolean,
+        default: false
+    },
+    verified: {
+        type: Boolean,
+        default: false
+    },
+    certificates: {
+        type: [String],
+        default: []
+    },
+    specialAchievements: {
+        type: [String],
+        default: []
+    },
+    licenseNumber: {
+        type: String
+    },
+    bio: {
+        type: String,
+        required: function() { return this.role === 'doctor'; }
+    },
+    online: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });
