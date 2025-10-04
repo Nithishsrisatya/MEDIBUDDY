@@ -22,6 +22,8 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = process.env.REACT_APP_API;
+
 const PatientRecords = () => {
     const { user } = useAuth();
     const [patients, setPatients] = useState([]);
@@ -41,7 +43,7 @@ const PatientRecords = () => {
 
     const fetchPatients = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/doctors/${user._id}/patients`, {
+            const response = await fetch(`${API_URL}/api/doctors/${user._id}/patients`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -66,7 +68,7 @@ const PatientRecords = () => {
 
     const fetchPatientAppointments = async (patientId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/patient/${patientId}`, {
+            const response = await fetch(`${API_URL}/api/appointments/patient/${patientId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -90,7 +92,7 @@ const PatientRecords = () => {
 
     const handleUpdateAppointment = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/${selectedAppointment._id}`, {
+            const response = await fetch(`${API_URL}/api/appointments/${selectedAppointment._id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

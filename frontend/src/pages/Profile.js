@@ -22,6 +22,8 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = process.env.REACT_APP_API;
+
 const Profile = () => {
     const { user, updateUser, refreshUser } = useAuth();
     const [editing, setEditing] = useState(false);
@@ -79,7 +81,7 @@ const Profile = () => {
 
     const fetchPrescriptions = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments/my-appointments', {
+            const response = await fetch(`${API_URL}/api/appointments/my-appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -126,7 +128,7 @@ const Profile = () => {
         e.preventDefault();
         console.log('Submitting formData:', formData);
         try {
-            const response = await fetch('http://localhost:5000/api/users/profile', {
+            const response = await fetch(`${API_URL}/api/users/profile`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -158,7 +160,7 @@ const Profile = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/users/change-password', {
+            const response = await fetch(`${API_URL}/api/users/change-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
