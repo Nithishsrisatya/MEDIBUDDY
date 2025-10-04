@@ -27,6 +27,8 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API;
+
 const DoctorList = () => {
     const [searchParams] = useSearchParams();
     const [doctors, setDoctors] = useState([]);
@@ -62,7 +64,7 @@ const DoctorList = () => {
 
     const fetchDoctors = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/doctors', {
+            const response = await fetch(`${API_URL}/api/doctors`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -86,7 +88,7 @@ const DoctorList = () => {
 
     const fetchAvailability = async (doctorId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/doctor/${doctorId}/availability`, {
+            const response = await fetch(`${API_URL}/api/appointments/doctor/${doctorId}/availability`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -139,7 +141,7 @@ const DoctorList = () => {
 
     const fetchMyDoctors = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments/my-appointments', {
+            const response = await fetch(`${API_URL}/api/appointments/my-appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -158,7 +160,7 @@ const DoctorList = () => {
 
     const handleBookAppointment = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments', {
+            const response = await fetch(`${API_URL}/api/appointments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -23,6 +23,8 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = process.env.REACT_APP_API;
+
 const Appointments = () => {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState([]);
@@ -42,7 +44,7 @@ const Appointments = () => {
 
     const fetchAppointments = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments/my-appointments', {
+            const response = await fetch(`${API_URL}/api/appointments/my-appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -60,7 +62,7 @@ const Appointments = () => {
 
     const handleCancelAppointment = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/${selectedAppointment._id}/status`, {
+            const response = await fetch(`${API_URL}/api/appointments/${selectedAppointment._id}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -85,7 +87,7 @@ const Appointments = () => {
 
     const handleRescheduleAppointment = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/${selectedAppointment._id}`, {
+            const response = await fetch(`${API_URL}/api/appointments/${selectedAppointment._id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -112,7 +114,7 @@ const Appointments = () => {
 
     const handleMarkCompleted = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/${selectedAppointment._id}/status`, {
+            const response = await fetch(`${API_URL}/api/appointments/${selectedAppointment._id}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
