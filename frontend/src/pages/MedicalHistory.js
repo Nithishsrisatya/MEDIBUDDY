@@ -33,6 +33,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = 'https://medi-buddy-backend.onrender.com';
+
 const MedicalHistory = () => {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState([]);
@@ -50,7 +52,7 @@ const MedicalHistory = () => {
 
     const fetchMedicalHistory = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments/my-appointments', {
+            const response = await fetch(`${API_URL}/api/appointments/my-appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -101,7 +103,7 @@ const MedicalHistory = () => {
         formData.append('description', uploadDescription);
 
         try {
-            const response = await fetch('http://localhost:5000/api/medical-records/upload', {
+            const response = await fetch(`${API_URL}/api/medical-records/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`

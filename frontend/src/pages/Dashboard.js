@@ -40,7 +40,7 @@ const Dashboard = () => {
 
     const fetchDashboardData = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments/my-appointments', {
+            const response = await fetch('https://medi-buddy-backend.onrender.com/api/appointments/my-appointments', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -76,7 +76,7 @@ const Dashboard = () => {
         }
         setLoadingSearch(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/doctors?search=${encodeURIComponent(term)}`, {
+            const response = await fetch(`https://medi-buddy-backend.onrender.com/api/doctors?search=${encodeURIComponent(term)}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
