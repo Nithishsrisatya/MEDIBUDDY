@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = process.env.REACT_APP_API;
+const API_URL = 'https://medi-buddy-backend.onrender.com';
 
 const PatientRecords = () => {
     const { user } = useAuth();

@@ -33,6 +33,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = 'https://medi-buddy-backend.onrender.com';
+
 const MedicalHistory = () => {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState([]);

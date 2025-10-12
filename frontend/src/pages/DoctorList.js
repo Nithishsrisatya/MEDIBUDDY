@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 
-const API_URL = process.env.REACT_APP_API;
+const API_URL = 'https://medi-buddy-backend.onrender.com';
 
 const DoctorList = () => {
     const [searchParams] = useSearchParams();

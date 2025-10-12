@@ -11,7 +11,7 @@ const DoctorCalendar = ({ doctorId, onSlotSelect }) => {
         if (!doctorId) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/doctor/${doctorId}/availability`, {
+            const response = await fetch(`https://medi-buddy-backend.onrender.com/api/appointments/doctor/${doctorId}/availability`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
